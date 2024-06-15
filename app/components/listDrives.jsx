@@ -27,7 +27,7 @@ export default function ListDrives({
             <h1 className="text-primary">Drives ({amountDrives})</h1>
             <ul>
                 {drives.map((drive) => (
-                    <div className="flex flex-row border-2 rounded-md items-center mb-2 p-1 px-2 hover:bg-accent transition cursor-pointer">
+                    <div className="flex flex-row border-2 border-primary rounded-md items-center mb-2 p-1 px-2 hover:bg-accent transition cursor-pointer">
                         <div className="p-4">
                             <LuHardDrive className="text-primary" />
                         </div>

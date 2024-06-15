@@ -60,8 +60,8 @@ fn list_files(drive_letter: &str) -> Value {
 
   let result: Vec<Value> = list_files_on_drive(drive_letter);
 
-  let mut files = Vec::new();
-  let mut dirs = Vec::new();
+  let mut files: Vec<Value> = Vec::new();
+  let mut dirs: Vec<Value> = Vec::new();
 
   for item in result {
     if item.get("file").is_some() {

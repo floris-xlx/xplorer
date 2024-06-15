@@ -2,28 +2,45 @@
 
 import { useEffect, useState } from 'react';
 
-const ListFiles = ({ files, directories }) => { 
+import { FolderIcon, DocumentIcon } from '@heroicons/react/20/solid';
+
+const ListFiles = ({ files, directories }) => {
     console.log(files);
     console.log(directories);
+
     return (
-        <div>
-            <h1 className="text-primary">Files</h1>
+        <div className="">
+         
+            <ul>
+                {directories.map((directory) => (
+                    <li key={directory.directory}>
+                        <div className="flex flex-row gap-1 rounded-md hover:bg-accent transition mt-[2px] select-none p-1 cursor-pointer">
+                            < FolderIcon className="w-6 h-6 text-secondary" />
+                            <p className="text-primary">
+                                {directory.directory.substring(3)}
+                            </p>
+                        </div>
+
+                    </li>
+                ))}
+            </ul>
+            
             <ul>
                 {files.map((file) => (
                     <li key={file.file}>
-                        <p className="text-primary">{file.file}</p>
+                        <div className="flex flex-row gap-1 rounded-md hover:bg-accent transition mt-[2px] select-none p-1 cursor-pointer">
+                            {["png", "jpeg", "jpg", "ico", "gif", "mp4", "avi"].includes(file.file.split('.').pop().toLowerCase()) && file.preview ? (
+                                <img src={`data:image/png;base64,${file.preview}`} alt="preview" className="w-6 h-6" />
+                            ) : (
+                                < DocumentIcon className="w-6 h-6 text-secondary" />
+                            )}
+                            <p className="text-primary">{file.file.substring(3)}</p>
+                        </div>
                     </li>
                 ))}
             </ul>
 
-            <h1 className="text-primary">Directories</h1>
-            <ul>
-                {directories.map((directory) => (
-                    <li key={directory.directory}>
-                        <p className="text-primary">{directory.directory}</p>
-                    </li>
-                ))}
-            </ul>
+
         </div>
     );
 };

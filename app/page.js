@@ -32,17 +32,25 @@ export default function Home() {
   }, [selectedDiskLetter]);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24 bg-primary">
-      <Greet />
-      {selectedDiskLetter ? (
-        <div>
-          <p className="text-primary">Selected Drive: {selectedDiskLetter}</p>
+    <main className="flex min-h-screen w-[100vw] flex-col items-center justify-between bg-primary ">
 
-          <ListFiles files={files} directories={directories} />
-        </div>
-      ) : (
-        <ListDrives setDriveLetter={setSelectedDiskLetter} />
-      )}
+      <div className=" flex overflow-x-hidden ">
+        {selectedDiskLetter ? (
+          <div className="w-[100vw] px-[25px]">
+            <ListFiles files={files} directories={directories} />
+          </div>
+        ) : (
+          <div className="mt-[75px]">
+            <ListDrives setDriveLetter={setSelectedDiskLetter} />
+            
+          </div>
+        )}
+      </div>
+
+      <div className="fixed bottom-0 right-0 flex p-2">
+        <ThemeButton />
+      </div>
+       
     </main>
   );
 }
