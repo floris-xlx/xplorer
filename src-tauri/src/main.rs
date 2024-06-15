@@ -4,12 +4,18 @@
 pub mod disk;
 
 use crate::disk::DisksInfo;
+use crate::disk::list_files::list_files_on_drive;
+
 use serde_json::{json, Value};
 
 fn main() {
     tauri::Builder 
         ::default()
-        .invoke_handler(tauri::generate_handler![greet, list_drives])
+        .invoke_handler(tauri::generate_handler![
+          greet, 
+          list_drives,
+          list_files
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 } 
@@ -47,3 +53,23 @@ fn list_drives() -> Value {
   }) 
 
 } 
+
+
+#[tauri::command(rename_all = "snake_case")]
+fn list_files(drive_letter: &str) -> Value {
+
+  let result: Vec<Value> = list_files_on_drive(drive_letter);
+
+  let mut files = Vec::new();
+  let mut dirs = Vec::new();
+
+  for item in result {
+    if item.get("file").is_some() {
+      files.push(item);
+    } else if item.get("directory").is_some() {
+      dirs.push(item);
+    }
+  }
+
+  json!({ "files": files, "dirs": dirs })
+}
