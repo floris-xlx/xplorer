@@ -1,17 +1,39 @@
 import React, { useEffect, useState } from "react";
 
 import { ArrowLeftIcon } from '@heroicons/react/20/solid';
+import { LuTrash } from "react-icons/lu";
+
+import { RemoveKeyLocalStorage, SetKeyLocalStorage, GetKeyLocalStorage } from "@/app/client/caching/LocalStorageRouter";
+
+// tauri imports
+import { invoke } from "@tauri-apps/api/tauri";
+
 
 const Header = ({
     setPath,
-    path
+    path,
+    setSelectedFiles,
+    selectedFiles,
+    triggerReload,
+    setSelectedDiskLetter
 }) => {
     const removeOnePath = (path) => {
+        const currentPath = GetKeyLocalStorage('currentPath');
+        // if the path is only x:/ then setSelectedDiskLetter to null
+        // and dont use the path variable
+        if (currentPath.length === 3) {
+            setSelectedDiskLetter(null);
+            return '';
+        }       
+        
+
+
         if (path === null) {
             return path;
         }
         const lastBackslash = path.lastIndexOf('\\');
         const lastSlash = path.lastIndexOf('/');
+        
         const lastSeparator = Math.max(lastBackslash, lastSlash);
         if (lastSeparator !== -1) {
             const newPath = path.substring(0, lastSeparator);
@@ -20,22 +42,56 @@ const Header = ({
             }
             return newPath;
         }
-
+        
         return '';
     }
-    return (
-        <>
-      
-        <div className="h-[50px] bg-secondary border-b border-primary w-full flex items-center mx-auto"
-            onClick={() => setPath(removeOnePath(path))}
-        >
-            <div className="hover:bg-accent transition p-1 rounded-md cursor-pointer ml-1">
-                < ArrowLeftIcon className="w-6 h-6 text-primary" />
-            </div>
-            
 
-        </div>
-        </>
-    );
+
+    const removeFilePathCache = () => {
+        RemoveKeyLocalStorage('selectedFilePath');
+        setTimeout(() => {
+            setSelectedFiles([]);
+        }, 100);
+
+        SetKeyLocalStorage('lastEvent', 'cache_flushed_by_header');
     }
+
+    const removeFilesInSelection = (folderPaths) => {
+        invoke("delete_files", { filepath_list: folderPaths })
+            .then((result) => console.log(result))
+            .catch(console.error);
+
+        // reload window
+        triggerReload();
+            
+        setTimeout(() => {
+            setSelectedFiles([]);
+        }, 100);
+    }
+
+    return (
+        <div className="h-[50px] bg-secondary border-b border-primary w-full flex items-center mx-auto justify-between px-1">
+
+            <div
+                onClick={() => setPath(removeOnePath(path))}
+            >
+                <div className="hover:bg-accent transition p-1 rounded-md cursor-pointer ml-1"
+                    onClick={removeFilePathCache}
+                >
+                    < ArrowLeftIcon className="w-6 h-6 text-primary" />
+                </div>
+
+
+
+
+            </div>
+
+            <div className="rounded-md p-1 mr-2 cursor-pointer hover:bg-red-highlight transition"
+                onClick={() => removeFilesInSelection(selectedFiles)}
+            >
+                < LuTrash className="w-6 h-6 text-primary" />
+            </div>
+        </div>
+    );
+}
 export default Header;

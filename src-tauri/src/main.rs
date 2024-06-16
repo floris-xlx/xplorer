@@ -7,7 +7,9 @@ pub mod files;
 use crate::disk::DisksInfo;
 use crate::disk::list_files::{ list_files_on_drive, list_files_at_root };
 use crate::files::formats::avif::convert_avif_to_webp;
-use std::fs::{OpenOptions, File};
+use crate::files::delete::delete_files;
+use crate::files::rename::rename_files;
+use std::fs::{ OpenOptions, File };
 use serde_json::{ json, Value };
 use std::path::Path;
 use std::io::Write;
@@ -16,35 +18,35 @@ use std::process::{ Command, Stdio };
 use std::process::Child;
 use std::io::Error;
 
-
 fn main() {
+    println!("Starting Tauri application...");
+    log_append_to_file("Starting Tauri application...");
+
     tauri::Builder
         ::default()
         .invoke_handler(
             tauri::generate_handler![
-                greet,
                 list_drives,
                 list_files,
                 list_files_from_root,
                 open_file_from_path,
-                convert_avif_to_webp
+                convert_avif_to_webp,
+                delete_files
             ]
         )
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
-}
 
-#[tauri::command]
-fn greet(name: &str) -> String {
-    println!("Hello greet, {}!", name);
-    format!("Hello, {}!", name)
+    println!("Tauri application started successfully.");
+    log_append_to_file("Tauri application started successfully.");
 }
 
 #[tauri::command]
 fn list_drives() -> Value {
-    let drives: Vec<DisksInfo> = DisksInfo::list_drives();
+    println!("Listing drives...");
+    log_append_to_file("Listing drives...");
 
-    println!("{drives:#?}");
+    let drives: Vec<DisksInfo> = DisksInfo::list_drives();
 
     let mut drives_json: Vec<Value> = Vec::new();
 
@@ -61,34 +63,67 @@ fn list_drives() -> Value {
         drives_json.push(drive_json);
     }
 
-    json!({ 
-    "drives": drives_json,
-    "length": drives_json.len()
-  })
+    let response = json!({ 
+        "drives": drives_json,
+        "length": drives_json.len()
+    });
+
+    println!("Drives listed: {:?}", response);
+    log_append_to_file(&format!("Drives listed: {:?}", response));
+
+    response
 }
 
 #[tauri::command(rename_all = "snake_case")]
 fn list_files(path: &str) -> Value {
+    // handle path error
+    if (path.is_empty()) || (path == "null") {
+        let error_message = "Error: Path is null";
+        println!("{}", error_message);
+        log_append_to_file(error_message);
+        return json!({ "error": "Path is null" });
+    }
+    println!("Listing files from path: {}", path);
+    log_append_to_file(&format!("Listing files from path: {}", path));
+
     let start_time_in_ms: u128 = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
+    println!("Start time in ms: {}", start_time_in_ms);
+    log_append_to_file(&format!("Start time in ms: {}", start_time_in_ms));
 
     let result: Vec<Value> = list_files_on_drive(path);
+    println!("Result from list_files_on_drive: {:?}", result);
+    log_append_to_file(&format!("Result from list_files_on_drive: {:?}", result));
 
     let mut files: Vec<Value> = Vec::new();
     let mut dirs: Vec<Value> = Vec::new();
 
     for item in result {
         if item.get("file").is_some() {
+            println!("File found: {:?}", item);
+            log_append_to_file(&format!("File found: {:?}", item));
             files.push(item);
         } else if item.get("directory").is_some() {
+            println!("Directory found: {:?}", item);
+            log_append_to_file(&format!("Directory found: {:?}", item));
             dirs.push(item);
         }
     }
 
     let end_time_in_ms: u128 = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
+    println!("End time in ms: {}", end_time_in_ms);
+    log_append_to_file(&format!("End time in ms: {}", end_time_in_ms));
 
     let total_amount_files: usize = files.len();
+    println!("Total amount of files: {}", total_amount_files);
+    log_append_to_file(&format!("Total amount of files: {}", total_amount_files));
+
     let total_amount_dirs: usize = dirs.len();
+    println!("Total amount of directories: {}", total_amount_dirs);
+    log_append_to_file(&format!("Total amount of directories: {}", total_amount_dirs));
+
     let total_time: u128 = end_time_in_ms - start_time_in_ms;
+    println!("Total time taken: {} ms", total_time);
+    log_append_to_file(&format!("Total time taken: {} ms", total_time));
 
     let total_log: String = format!(
         "{} {} {} {}",
@@ -97,44 +132,65 @@ fn list_files(path: &str) -> Value {
         total_time,
         path
     );
+    println!("Total log: {}", total_log);
     log_append_to_file(&total_log);
 
-    json!({ 
+    let response = json!({ 
         "files": files, 
         "dirs": dirs, 
         "loading_time": total_time, 
         "total_amount_files": total_amount_files, 
         "total_amount_dirs": total_amount_dirs
-    })
+    });
+    println!("Response: {:?}", response);
+    log_append_to_file(&format!("Response: {:?}", response));
+
+    response
 }
+
 
 #[tauri::command(rename_all = "snake_case")]
 fn list_files_from_root(path: &str) -> Value {
-    let start_time_in_ms: u128 = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
-    // check if path is not a duplicate
+    println!("Listing files from root path: {}", path);
+    log_append_to_file(&format!("Listing files from root path: {}", path));
 
-    println!("list_files_from_root {:?}", path);
+    let start_time_in_ms: u128 = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
+    println!("Start time in ms: {}", start_time_in_ms);
+    log_append_to_file(&format!("Start time in ms: {}", start_time_in_ms));
 
     let filepath: &Path = Path::new(path);
 
     let result: Vec<Value> = list_files_at_root(filepath).unwrap();
+    println!("Result from list_files_at_root: {:?}", result);
+    log_append_to_file(&format!("Result from list_files_at_root: {:?}", result));
 
     let mut files: Vec<Value> = Vec::new();
     let mut dirs: Vec<Value> = Vec::new();
 
     for item in result {
         if item.get("file").is_some() {
+            println!("File found: {:?}", item);
+            log_append_to_file(&format!("File found: {:?}", item));
             files.push(item);
         } else if item.get("directory").is_some() {
+            println!("Directory found: {:?}", item);
+            log_append_to_file(&format!("Directory found: {:?}", item));
             dirs.push(item);
         }
     }
 
     let total_amount_files: usize = files.len();
+    println!("Total amount of files: {}", total_amount_files);
+    log_append_to_file(&format!("Total amount of files: {}", total_amount_files));
+
     let total_amount_dirs: usize = dirs.len();
+    println!("Total amount of directories: {}", total_amount_dirs);
+    log_append_to_file(&format!("Total amount of directories: {}", total_amount_dirs));
 
     let end_time_in_ms: u128 = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
     let total_time: u128 = end_time_in_ms - start_time_in_ms;
+    println!("Total time taken: {} ms", total_time);
+    log_append_to_file(&format!("Total time taken: {} ms", total_time));
 
     let total_log: String = format!(
         "Total files:{} Total dirs:{} TIME: {}ms PATH: {}",
@@ -143,15 +199,20 @@ fn list_files_from_root(path: &str) -> Value {
         total_time,
         path
     );
+    println!("Total log: {}", total_log);
     log_append_to_file(&total_log);
 
-    json!({ 
-      "files": files, 
-      "dirs": dirs, 
-      "loading_time": total_time, 
-      "total_amount_files": total_amount_files, 
-      "total_amount_dirs": total_amount_dirs
-    })
+    let response = json!({ 
+        "files": files, 
+        "dirs": dirs, 
+        "loading_time": total_time, 
+        "total_amount_files": total_amount_files, 
+        "total_amount_dirs": total_amount_dirs
+    });
+    println!("Response: {:?}", response);
+    log_append_to_file(&format!("Response: {:?}", response));
+
+    response
 }
 
 fn log_append_to_file(log: &str) {
@@ -168,10 +229,11 @@ fn log_append_to_file(log: &str) {
 
 #[tauri::command(rename_all = "snake_case")]
 fn open_file_from_path(path: &str) -> Result<(), String> {
+    println!("Opening file from path: {}", path);
+    log_append_to_file(&format!("Opening file from path: {}", path));
 
     // Normalize path to use forward slashes
     let path: String = path.replace("\\", "/");
-    println!("OPENING: open_file_from_path {:?}", path);
 
     let result: Result<Child, Error> = Command::new("cmd")
         .arg("/C")
@@ -182,10 +244,1047 @@ fn open_file_from_path(path: &str) -> Result<(), String> {
         .stderr(Stdio::null())
         .spawn();
 
-    println!("RESULT: {:?}", result);
 
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
+
+
+
+        
     match result {
-        Ok(_) => Ok(()),
-        Err(e) => Err(format!("failed to open file: {}", e)),
+        Ok(_) => {
+            let success_message = "File opened successfully.";
+            println!("{}", success_message);
+            log_append_to_file(success_message);
+            Ok(())
+        },
+        Err(e) => {
+            let error_message = format!("Failed to open file: {}", e);
+            println!("{}", error_message);
+            log_append_to_file(&error_message);
+            Err(error_message)
+        },
     }
 }
+

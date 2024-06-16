@@ -6,11 +6,21 @@ import { invoke } from "@tauri-apps/api/tauri";
 
 import { FolderIcon, DocumentIcon } from '@heroicons/react/20/solid';
 import { Checkbox } from "@nextui-org/react";
+import { SetKeyLocalStorage, RemoveKeyLocalStorage, GetKeyLocalStorage } from "@/app/client/caching/LocalStorageRouter";
 
 
-const FolderView = ({ files, directories, setPath, path, relativePath }) => {
-    console.log(files);
-    console.log(directories);
+const FolderView = ({ files, directories, setPath, path, relativePath, selectedFiles, setSelectedFiles  }) => {
+      useEffect(() => {
+        // Initialize selectedFiles from local storage
+        const storedFiles = JSON.parse(GetKeyLocalStorage('selectedFilePath')) || [];
+        setSelectedFiles(storedFiles);
+    }, []);
+
+    useEffect(() => {
+        // Update local storage whenever selectedFiles changes
+        SetKeyLocalStorage('selectedFilePath', JSON.stringify(selectedFiles));
+    }, [selectedFiles]);
+
 
     const removePathFromDirectory = (directory) => {
         // Remove anything before the last / in the path
@@ -37,11 +47,26 @@ const FolderView = ({ files, directories, setPath, path, relativePath }) => {
         }
     }
 
+    const handleCheckboxChange = (file) => {
+        setSelectedFiles((prevSelectedFiles) => {
+            if (prevSelectedFiles.includes(file)) {
+                return prevSelectedFiles.filter(selectedFile => selectedFile !== file);
+            } else {
+                return [...prevSelectedFiles, file];
+            }
+        });
+    };
+
+    const isThisBoxTicked = (file) => {
+        return selectedFiles.includes(file);
+    };
+
+
     return (
         <div className="">
 
             <ul>
-                {directories.map((directory) => (
+                {directories.sort((a, b) => a.directory.localeCompare(b.directory)).map((directory) => (
                     <li key={directory.directory}>
                         <div className="flex flex-row gap-1 rounded-md hover:bg-accent transition mt-[2px] select-none p-1 cursor-pointer"
                             onClick={() => setPath(directory.directory)}
@@ -56,20 +81,25 @@ const FolderView = ({ files, directories, setPath, path, relativePath }) => {
             </ul>
 
             <ul>
-                {files.map((file) => (
+                {files.sort((a, b) => a.file.localeCompare(b.file)).map((file) => (
+
                     <li key={file.file}>
                         <div className="flex flex-row gap-1 rounded-md hover:bg-accent transition mt-[2px] select-none p-1 cursor-pointer"
                             onClick={() => openFile(file.file)}
-
                         >
                             {["png", "jpeg", "jpg", "ico", "gif", "mp4", "avi"].includes(file.file.split('.').pop().toLowerCase()) && file.preview ? (
                                 <img src={`data:image/png;base64,${file.preview}`} alt="preview" className="w-[24px] h-[24px] rounded-md" />
                             ) : (
                                 <div className="flex flex-row gap-x-1 z-0">
-                                    <Checkbox color="success">
-                                    < DocumentIcon className="w-6 h-6 text-secondary" />
+                                    <Checkbox
+                                        isSelected={isThisBoxTicked(file.file)}
+                                        onChange={() => handleCheckboxChange(file.file)}
+                                        color="success"
+                                    >
+
+                                        < DocumentIcon className="w-6 h-6 text-secondary" />
                                     </Checkbox>
-                                    
+
                                 </div>
 
                             )}
