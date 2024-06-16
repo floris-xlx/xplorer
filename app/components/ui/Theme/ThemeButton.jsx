@@ -29,7 +29,7 @@ const ThemeButton = () => {
             <button
                 type="button"
                 id="dropdown-notifications"
-                className="inline-flex items-center justify-center gap-1 px-3 py-[7.5px] text-sm font-semibold leading-5 text-primary border-primary bg-primary hover:bg-accent transition focus:outline-none focus:ring-2 focus:ring-primary rounded-md border-mobile"
+                className="inline-flex items-center justify-center gap-1 px-3 py-[7.5px] text-sm font-semibold leading-5 text-primary bg-primary hover:bg-accent transition focus:outline-none focus:ring-2 focus:ring-primary rounded-md "
                 onClick={() => toggleDarkMode()}
             >
                 <div

@@ -3,6 +3,8 @@ pub mod name;
 pub mod formatting;
 pub mod info;
 pub mod list_files;
+pub mod utils;
+
 
 use crate::disk::info::list_drives;
 

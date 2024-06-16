@@ -40,6 +40,7 @@ export default function ListDrives({
                                         {drive.drive_name} ({drive.drive_letter}:)
                                     </p>
                                 </div>
+                                
                                 <div className="w-[180px]">
                                     <Progress
                                         color="default"
