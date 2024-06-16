@@ -10,8 +10,9 @@ use crate::disk::list_files::{ list_files_on_drive, list_files_at_root };
 use crate::files::formats::avif::convert_avif_to_webp;
 use crate::files::delete::delete_files;
 use crate::images::remove_background::remove_background;
+use crate::images::resize::resize_images;
 use crate::files::rename::rename_files;
-use std::fs::{ OpenOptions, File };
+use std::fs::OpenOptions;
 use serde_json::{ json, Value };
 use std::path::Path;
 use std::io::Write;
@@ -35,7 +36,8 @@ fn main() {
                 convert_avif_to_webp,
                 delete_files,
                 rename_files,
-                remove_background
+                remove_background,
+                resize_images
             ]
         )
         .run(tauri::generate_context!())
@@ -81,7 +83,7 @@ fn list_drives() -> Value {
 #[tauri::command(rename_all = "snake_case")]
 fn list_files(path: &str) -> Value {
     // handle path error
-    if (path.is_empty()) || (path == "null") {
+    if path.is_empty() || path == "null" {
         let error_message = "Error: Path is null";
         println!("{}", error_message);
         log_append_to_file(error_message);
@@ -139,7 +141,8 @@ fn list_files(path: &str) -> Value {
     println!("Total log: {}", total_log);
     log_append_to_file(&total_log);
 
-    let response = json!({ 
+    let response =
+        json!({ 
         "files": files, 
         "dirs": dirs, 
         "loading_time": total_time, 
@@ -151,7 +154,6 @@ fn list_files(path: &str) -> Value {
 
     response
 }
-
 
 #[tauri::command(rename_all = "snake_case")]
 fn list_files_from_root(path: &str) -> Value {
@@ -206,7 +208,8 @@ fn list_files_from_root(path: &str) -> Value {
     println!("Total log: {}", total_log);
     log_append_to_file(&total_log);
 
-    let response = json!({ 
+    let response =
+        json!({ 
         "files": files, 
         "dirs": dirs, 
         "loading_time": total_time, 
@@ -247,20 +250,19 @@ fn open_file_from_path(path: &str) -> Result<(), String> {
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .spawn();
-        
+
     match result {
         Ok(_) => {
             let success_message: &str = "File opened successfully.";
             println!("{}", success_message);
             log_append_to_file(success_message);
             Ok(())
-        },
+        }
         Err(e) => {
             let error_message: String = format!("Failed to open file: {}", e);
             println!("{}", error_message);
             log_append_to_file(&error_message);
             Err(error_message)
-        },
+        }
     }
 }
-

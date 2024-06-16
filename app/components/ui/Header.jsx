@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-import { ArrowLeftIcon, PencilSquareIcon, EyeDropperIcon } from '@heroicons/react/20/solid';
+import { ArrowLeftIcon, PencilSquareIcon, EyeDropperIcon, RectangleStackIcon } from '@heroicons/react/20/solid';
 
 
 import { LuTrash } from "react-icons/lu";
@@ -97,6 +97,19 @@ const Header = ({
         }, 100);
     }
 
+    const handleImageResizerInSelection = (folderPaths) => {
+        invoke("resize_images", { filepath_list: folderPaths })
+            .then((result) => console.log(result))
+            .catch(console.error);
+
+        // reload window
+        triggerReload();
+
+        setTimeout(() => {
+            setSelectedFiles([]);
+        }, 100);
+    }
+
     return (
         <div className="h-[50px] bg-secondary border-b border-primary w-full flex items-center mx-auto justify-between px-1">
 
@@ -130,6 +143,13 @@ const Header = ({
                     onClick={() => handleRemoveBackgroundInSelection(selectedFiles)}
                 >
                     < EyeDropperIcon className="w-6 h-6 text-primary" />
+
+                </div>
+
+                <div className="rounded-md p-1 mr-2 cursor-pointer hover:bg-accent transition"
+                    onClick={() => handleImageResizerInSelection(selectedFiles)}
+                >
+                    < RectangleStackIcon className="w-6 h-6 text-primary" />
 
                 </div>
             </div>

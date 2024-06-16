@@ -24,3 +24,17 @@
 [ ] - new folder creation
 [ ] - move files
 [ ] - allow for auto renaming in a numbered sense, 1,2,3,4,5
+[ ] - add hidden file option
+[ ] - json file viewer
+[ ] - json file syntax
+[ ] - recognize rust projects 
+[ ] - recognize git repos
+[ ] - git pull and push from there
+[ ] - add an OPEN WITH 
+[ ] - add an open in cursor hotbutton
+[ ] - abstract the logic in the header a bit more for calling invokes
+[ ] - get rid of all unwraps
+[ ] - handle the access is denied error
+[ ] - add AVIF file decoding
+[ ] - add WEBP file encoding
+[ ] - show path we're currently in
