@@ -11,6 +11,7 @@ import Greet from "./greet.jsx";
 import ListDrives from "./components/listDrives.jsx";
 import ListFiles from "./components/listFiles.jsx";
 import FolderView from "./components/ui/Views/FolderView";
+import Header  from "./components/ui/Header";
 
 import ThemeButton from "@/app/components/ui/Theme/ThemeButton";
 
@@ -60,7 +61,18 @@ export default function Home() {
   
   return (
     <main className="flex min-h-screen w-[100vw] flex-col items-center justify-between bg-primary ">
-      <p className="fixed top-0 left-0 text-red-primary font-semibold text-md p-1 select-none bg-secondary border border-red-400 rounded-md "> 
+      <div className="fixed top-0 mx-auto font-semibold text-sm  text-primary w-full items-center">
+        < Header 
+          path={path}
+          setPath={setPath}
+        />
+      </div>
+      
+      
+      <p className="fixed top-0 right-0 text-red-primary font-semibold text-md p-1 select-none bg-secondary border border-red-400 rounded-md "> 
+
+
+
         Loaded in {loadingTime}ms
       </p>
 
@@ -69,7 +81,7 @@ export default function Home() {
 
 
         {selectedDiskLetter ? (
-          <div className="w-[100vw] px-[25px]">
+          <div className="w-[100vw] px-[25px] mt-[50px]">
             <FolderView
               files={files}
               directories={directories}

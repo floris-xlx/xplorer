@@ -158,7 +158,7 @@ fn open_file_from_path(path: &str) -> Result<(), String> {
     use std::process::Stdio;
 
     // Normalize path to use forward slashes
-    let path = path.replace("\\", "/");
+    let path: String = path.replace("\\", "/");
     println!("OPENING: open_file_from_path {:?}", path);
 
     let result = Command::new("cmd")
