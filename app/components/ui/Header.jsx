@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 
-import { ArrowLeftIcon } from '@heroicons/react/20/solid';
+import { ArrowLeftIcon, PencilSquareIcon, EyeDropperIcon } from '@heroicons/react/20/solid';
+
+
 import { LuTrash } from "react-icons/lu";
 
 import { RemoveKeyLocalStorage, SetKeyLocalStorage, GetKeyLocalStorage } from "@/app/client/caching/LocalStorageRouter";
@@ -24,8 +26,8 @@ const Header = ({
         if (currentPath.length === 3) {
             setSelectedDiskLetter(null);
             return '';
-        }       
-        
+        }
+
 
 
         if (path === null) {
@@ -33,7 +35,7 @@ const Header = ({
         }
         const lastBackslash = path.lastIndexOf('\\');
         const lastSlash = path.lastIndexOf('/');
-        
+
         const lastSeparator = Math.max(lastBackslash, lastSlash);
         if (lastSeparator !== -1) {
             const newPath = path.substring(0, lastSeparator);
@@ -42,7 +44,7 @@ const Header = ({
             }
             return newPath;
         }
-        
+
         return '';
     }
 
@@ -63,7 +65,33 @@ const Header = ({
 
         // reload window
         triggerReload();
-            
+
+        setTimeout(() => {
+            setSelectedFiles([]);
+        }, 100);
+    }
+
+    const handleRenameFilesInSelection = (folderPaths) => {
+        invoke("rename_files", { filepath_list: folderPaths })
+            .then((result) => console.log(result))
+            .catch(console.error);
+
+        // reload window
+        triggerReload();
+
+        setTimeout(() => {
+            setSelectedFiles([]);
+        }, 100);
+    }
+
+    const handleRemoveBackgroundInSelection = (folderPaths) => {
+        invoke("remove_background", { filepath_list: folderPaths })
+            .then((result) => console.log(result))
+            .catch(console.error);
+
+        // reload window
+        triggerReload();
+
         setTimeout(() => {
             setSelectedFiles([]);
         }, 100);
@@ -85,12 +113,28 @@ const Header = ({
 
 
             </div>
+            <div className="flex flex-row gap-x-1">
+                <div className="rounded-md p-1 mr-2 cursor-pointer hover:bg-red-highlight transition"
+                    onClick={() => removeFilesInSelection(selectedFiles)}
+                >
+                    < LuTrash className="w-6 h-6 text-primary" />
+                </div>
 
-            <div className="rounded-md p-1 mr-2 cursor-pointer hover:bg-red-highlight transition"
-                onClick={() => removeFilesInSelection(selectedFiles)}
-            >
-                < LuTrash className="w-6 h-6 text-primary" />
+                <div className="rounded-md p-1 mr-2 cursor-pointer hover:bg-accent transition"
+                    onClick={() => handleRenameFilesInSelection(selectedFiles)}
+                >
+                    < PencilSquareIcon className="w-6 h-6 text-primary" />
+                </div>
+
+                <div className="rounded-md p-1 mr-2 cursor-pointer hover:bg-accent transition"
+                    onClick={() => handleRemoveBackgroundInSelection(selectedFiles)}
+                >
+                    < EyeDropperIcon className="w-6 h-6 text-primary" />
+
+                </div>
             </div>
+
+
         </div>
     );
 }
