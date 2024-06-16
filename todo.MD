@@ -38,3 +38,4 @@
 [ ] - add AVIF file decoding
 [ ] - add WEBP file encoding
 [ ] - show path we're currently in
+- [ ] cache user preferences and cache into %appdata%
