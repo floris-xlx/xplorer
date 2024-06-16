@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from "react";
 
+// tauri imports
+import { invoke } from "@tauri-apps/api/tauri";
+
+
 import { FolderIcon, DocumentIcon } from '@heroicons/react/20/solid';
 
 const FolderView = ({ files, directories, setPath, path, relativePath }) => {
@@ -14,6 +18,13 @@ const FolderView = ({ files, directories, setPath, path, relativePath }) => {
             return directory.substring(lastSlash + 1);
         }
         return directory.substring(3);
+    }
+
+
+    const openFile = (folderPath) => {
+        invoke("open_file_from_path", { path: folderPath })
+            .then((result) => console.log(result))
+            .catch(console.error)
     }
 
 
@@ -38,7 +49,10 @@ const FolderView = ({ files, directories, setPath, path, relativePath }) => {
             <ul>
                 {files.map((file) => (
                     <li key={file.file}>
-                        <div className="flex flex-row gap-1 rounded-md hover:bg-accent transition mt-[2px] select-none p-1 cursor-pointer">
+                        <div className="flex flex-row gap-1 rounded-md hover:bg-accent transition mt-[2px] select-none p-1 cursor-pointer"
+                            onClick={() => openFile(file.file)}
+                        
+                        >
                             {["png", "jpeg", "jpg", "ico", "gif", "mp4", "avi"].includes(file.file.split('.').pop().toLowerCase()) && file.preview ? (
                                 <img src={`data:image/png;base64,${file.preview}`} alt="preview" className="w-[24px] h-[24px] rounded-md" />
                             ) : (
