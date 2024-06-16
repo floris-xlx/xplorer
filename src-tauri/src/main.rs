@@ -2,17 +2,20 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 pub mod disk;
+pub mod files;
 
 use crate::disk::DisksInfo;
 use crate::disk::list_files::{ list_files_on_drive, list_files_at_root };
+use crate::files::formats::avif::convert_avif_to_webp;
 use std::fs::OpenOptions;
 use serde_json::{ json, Value };
+
 
 fn main() {
     tauri::Builder
         ::default()
         .invoke_handler(
-            tauri::generate_handler![greet, list_drives, list_files, list_files_from_root, open_file_from_path]
+            tauri::generate_handler![greet, list_drives, list_files, list_files_from_root, open_file_from_path, convert_avif_to_webp]
         )
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

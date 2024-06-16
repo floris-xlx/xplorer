@@ -21,12 +21,19 @@ const FolderView = ({ files, directories, setPath, path, relativePath }) => {
     }
 
 
-    const openFile = (folderPath) => {
+const openFile = (folderPath) => {
+    const fileExtension = folderPath.split('.').pop().toLowerCase();
+    if (fileExtension === 'avif') {
+        invoke("convert_avif_to_webp", { path: folderPath })
+            .then((result) => console.log(result))
+            .catch(console.error);
+            
+    } else {
         invoke("open_file_from_path", { path: folderPath })
             .then((result) => console.log(result))
-            .catch(console.error)
+            .catch(console.error);
     }
-
+}
 
     return (
         <div className="">
