@@ -12,25 +12,25 @@ use std::io::BufWriter;
 pub fn convert_avif_to_webp(path: &str) -> Result<(), String> {
     println!("Starting conversion from AVIF to WebP for file: {}", path);
     
-    let path = Path::new(path);
-    let output_path = path.with_extension("webp");
+    let path: &Path = Path::new(path);
+    let output_path: std::path::PathBuf = path.with_extension("webp");
 
     println!("Output path will be: {:?}", output_path);
 
-    let file = match File::open(path) {
+    let file: File = match File::open(path) {
         Ok(file) => file,
         Err(e) => {
-            let err_msg = format!("Failed to open input file: {}", e);
+            let err_msg: String = format!("Failed to open input file: {}", e);
             println!("{}", err_msg);
             return Err(err_msg);
         }
     };
-    let reader = BufReader::new(file);
+    let reader: BufReader<File> = BufReader::new(file);
 
-    let img = match image::load(reader, ImageFormat::Avif) {
+    let img: DynamicImage = match image::load(reader, ImageFormat::Avif) {
         Ok(img) => img,
         Err(e) => {
-            let err_msg = format!("Failed to decode AVIF image: {}", e);
+            let err_msg: String = format!("Failed to decode AVIF image: {}", e);
             println!("{}", err_msg);
             return Err(err_msg);
         }
@@ -38,19 +38,19 @@ pub fn convert_avif_to_webp(path: &str) -> Result<(), String> {
 
     println!("Successfully decoded AVIF image.");
 
-    let output_file = match File::create(&output_path) {
+    let output_file: File = match File::create(&output_path) {
         Ok(file) => file,
         Err(e) => {
-            let err_msg = format!("Failed to create output file: {}", e);
+            let err_msg: String = format!("Failed to create output file: {}", e);
             println!("{}", err_msg);
             return Err(err_msg);
         }
     };
-    let writer = BufWriter::new(output_file);
+    let writer: BufWriter<File> = BufWriter::new(output_file);
 
-    let encoder = WebPEncoder::new_lossless(writer);
+    let encoder: WebPEncoder<BufWriter<File>> = WebPEncoder::new_lossless(writer);
     if let Err(e) = encoder.encode(&img.to_rgba8(), img.width(), img.height(), img.color().into()) {
-        let err_msg = format!("Failed to encode WebP image: {}", e);
+        let err_msg: String = format!("Failed to encode WebP image: {}", e);
         println!("{}", err_msg);
         return Err(err_msg);
     }

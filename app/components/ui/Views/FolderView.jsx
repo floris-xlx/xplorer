@@ -5,6 +5,8 @@ import { invoke } from "@tauri-apps/api/tauri";
 
 
 import { FolderIcon, DocumentIcon } from '@heroicons/react/20/solid';
+import { Checkbox } from "@nextui-org/react";
+
 
 const FolderView = ({ files, directories, setPath, path, relativePath }) => {
     console.log(files);
@@ -21,19 +23,19 @@ const FolderView = ({ files, directories, setPath, path, relativePath }) => {
     }
 
 
-const openFile = (folderPath) => {
-    const fileExtension = folderPath.split('.').pop().toLowerCase();
-    if (fileExtension === 'avif') {
-        invoke("convert_avif_to_webp", { path: folderPath })
-            .then((result) => console.log(result))
-            .catch(console.error);
-            
-    } else {
-        invoke("open_file_from_path", { path: folderPath })
-            .then((result) => console.log(result))
-            .catch(console.error);
+    const openFile = (folderPath) => {
+        const fileExtension = folderPath.split('.').pop().toLowerCase();
+        if (fileExtension === 'avif') {
+            invoke("convert_avif_to_webp", { path: folderPath })
+                .then((result) => console.log(result))
+                .catch(console.error);
+
+        } else {
+            invoke("open_file_from_path", { path: folderPath })
+                .then((result) => console.log(result))
+                .catch(console.error);
+        }
     }
-}
 
     return (
         <div className="">
@@ -58,12 +60,18 @@ const openFile = (folderPath) => {
                     <li key={file.file}>
                         <div className="flex flex-row gap-1 rounded-md hover:bg-accent transition mt-[2px] select-none p-1 cursor-pointer"
                             onClick={() => openFile(file.file)}
-                        
+
                         >
                             {["png", "jpeg", "jpg", "ico", "gif", "mp4", "avi"].includes(file.file.split('.').pop().toLowerCase()) && file.preview ? (
                                 <img src={`data:image/png;base64,${file.preview}`} alt="preview" className="w-[24px] h-[24px] rounded-md" />
                             ) : (
-                                < DocumentIcon className="w-6 h-6 text-secondary" />
+                                <div className="flex flex-row gap-x-1 z-0">
+                                    <Checkbox color="success">
+                                    < DocumentIcon className="w-6 h-6 text-secondary" />
+                                    </Checkbox>
+                                    
+                                </div>
+
                             )}
                             <p className="text-primary flex items-center">{removePathFromDirectory(file.file)}</p>
                         </div>
@@ -71,7 +79,7 @@ const openFile = (folderPath) => {
                 ))}
             </ul>
 
-        
+
         </div>
 
     );

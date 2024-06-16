@@ -61,7 +61,7 @@ export default function Home() {
   
   return (
     <main className="flex min-h-screen w-[100vw] flex-col items-center justify-between bg-primary ">
-      <div className="fixed top-0 mx-auto font-semibold text-sm  text-primary w-full items-center">
+      <div className="fixed top-0 mx-auto font-semibold text-sm  text-primary w-full items-center z-10">
         < Header 
           path={path}
           setPath={setPath}
