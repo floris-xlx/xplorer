@@ -17,7 +17,7 @@ const ListFiles = ({ files, directories }) => {
                         <div className="flex flex-row gap-1 rounded-md hover:bg-accent transition mt-[2px] select-none p-1 cursor-pointer">
                             < FolderIcon className="w-6 h-6 text-secondary" />
                             <p className="text-primary">
-                                {directory.directory.substring(3)}
+                                {directory.name}
                             </p>
                         </div>
                     </li>
@@ -33,7 +33,7 @@ const ListFiles = ({ files, directories }) => {
                             ) : (
                                 < DocumentIcon className="w-6 h-6 text-secondary" />
                             )}
-                            <p className="text-primary flex items-center">{file.file.substring(3)}</p>
+                            <p className="text-primary flex items-center">{file.filename}</p>
                         </div>
                     </li>
                 ))}

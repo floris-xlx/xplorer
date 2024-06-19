@@ -2,36 +2,24 @@ use crate::disk::list_files::list_files_at_root;
 
 use std::path::Path;
 use std::prelude::v1::Result as V1Result;
-use serde_json::Value;
-
+use serde_json::{Value, json};
+use std::time::SystemTime;
 
 #[tauri::command(rename_all = "snake_case")]
-pub fn search_keyword_in_files(keyword: &str, filepath: &Path) -> Result<Vec<Value>, String> {
-    let keyword: String = keyword.to_lowercase();
+pub fn search_keyword_in_files(keyword: &str, filepath: &Path) -> Result<Value, String> {
+    let start_time = SystemTime::now();
+    let keyword = keyword.to_lowercase();
+    let files = list_files_at_root(filepath).map_err(|e| e.to_string())?;
+    let matching_files: Vec<Value> = files.into_iter().filter(|file| {
+        file["filename"].as_str().map_or(false, |name| name.to_lowercase().contains(&keyword))
+    }).collect();
 
-    let files: Vec<Value> = match list_files_at_root(filepath) {
-        Ok(files) => files,
-        Err(e) => return Err(e.to_string()),
-    };
+    let duration: std::time::Duration = SystemTime::now().duration_since(start_time).expect("Time went backwards");
 
-    println!("Searching for keyword: {}", keyword);
-    println!("Files: {:?}", files);
-
-
-
-    let mut matching_files = Vec::new();
-
-    for file in files {
-        let filename: String = match file["filename"].as_str() {
-            Some(name) => name.to_lowercase(),
-            None => continue,
-        };
-
-        if filename.contains(&keyword) {
-            println!("Found matching file: {:?}", file);
-            matching_files.push(file);
-        }
-    }
-
-    Ok(matching_files)
+    Ok(json!({
+        "results": matching_files,
+        "amount_results": matching_files.len(),
+        "duration": SystemTime::now().duration_since(start_time).expect("Time went backwards").as_millis(),
+        "items_per_second": matching_files.len() as f64 / duration.as_secs_f64(),
+    }))
 }

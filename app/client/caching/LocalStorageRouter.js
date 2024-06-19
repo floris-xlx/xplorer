@@ -3,7 +3,8 @@ const AllowedKeys = [
   'lastEvent',
   'currentView',
   'currentDiskLetter',
-  'currentPath'
+  'currentPath',
+  'scopedFolder'
 ];
 
 function SetKeyLocalStorage(key, value) {

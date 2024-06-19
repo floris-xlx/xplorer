@@ -1,0 +1,9 @@
+pub mod png;
+pub mod webp;
+pub mod jpeg;
+pub mod ico;
+pub mod gif;
+pub mod bmp;
+pub mod tiff;
+pub mod svg;
+pub mod avif;
