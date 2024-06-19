@@ -1,4 +1,4 @@
-HyperExplorer is a blazingly fast feature rich fole explorer written completely in rust.
+Xplorer is a blazingly fast feature rich fole explorer written completely in rust.
 
 ## Features
 - [ ] everything Windows Explorer has but _faster_
