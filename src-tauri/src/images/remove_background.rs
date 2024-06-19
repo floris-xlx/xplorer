@@ -1,16 +1,15 @@
 // take an image from a filepath and then remove the background from it and save it to a new file with _NO_BG.(EXTENSION)
 
 use std::path::Path;
-use std::fs;
-use image::{ DynamicImage, GenericImageView, ImageFormat, Rgba };
-use imageproc::contrast::threshold;
+use image::{ DynamicImage, ImageFormat, Rgba };
+
 
 #[tauri::command(rename_all = "snake_case")]
 pub fn remove_background(filepath_list: Vec<String>) {
     for filepath in filepath_list {
-        let path = Path::new(&filepath);
+        let path: &Path = Path::new(&filepath);
         if let Some(extension) = path.extension() {
-            let new_filename = format!(
+            let new_filename: String = format!(
                 "{}_NO_BG.{}",
                 path.file_stem().unwrap().to_string_lossy(),
                 extension.to_string_lossy()
@@ -18,9 +17,9 @@ pub fn remove_background(filepath_list: Vec<String>) {
             let new_path = path.with_file_name(new_filename);
 
             match image::open(&path) {
-                Ok(mut img) => {
+                Ok(img) => {
                     // Convert image to RGBA
-                    let mut rgba_img = img.to_rgba8();
+                    let mut rgba_img: image::ImageBuffer<Rgba<u8>, Vec<u8>> = img.to_rgba8();
 
                     // Placeholder for background removal logic
                     // For now, we just make the background transparent based on a simple threshold
@@ -52,14 +51,14 @@ pub fn remove_background(filepath_list: Vec<String>) {
 
                     // Crop the image to the bounding box
                     if min_x <= max_x && min_y <= max_y {
-                        let cropped_img = DynamicImage::ImageRgba8(rgba_img).crop_imm(
+                        let cropped_img: DynamicImage = DynamicImage::ImageRgba8(rgba_img).crop_imm(
                             min_x,
                             min_y,
                             max_x - min_x + 1,
                             max_y - min_y + 1
                         );
 
-                        let format = match extension.to_string_lossy().to_lowercase().as_str() {
+                        let format: ImageFormat = match extension.to_string_lossy().to_lowercase().as_str() {
                             "png" => ImageFormat::Png,
                             "jpeg" | "jpg" => ImageFormat::Jpeg,
                             "gif" => ImageFormat::Gif,
@@ -72,6 +71,7 @@ pub fn remove_background(filepath_list: Vec<String>) {
                                 continue;
                             }
                         };
+
                         match cropped_img.save_with_format(&new_path, format) {
                             Ok(_) =>
                                 println!(

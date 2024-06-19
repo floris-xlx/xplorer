@@ -62,6 +62,24 @@ const FolderView = ({ files, directories, setPath, path, relativePath, selectedF
     };
 
 
+
+    // dir size
+    const [dirSize, setDirSize] = useState(0);
+    const [dirSizeUnit, setDirSizeUnit] = useState('MB');
+
+    useEffect(() => {
+        invoke("calculate_dir_size_in_gb", { path_list: [path] })
+            .then((result) => {
+                setDirSize(result.size);
+                setDirSizeUnit(result.unit);
+            })
+            .catch(console.error);
+    } , [path]);
+
+    console.log(dirSize, dirSizeUnit);
+    
+
+
     return (
         <div className="">
 

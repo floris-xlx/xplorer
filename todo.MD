@@ -1,40 +1,43 @@
-[ ] - file selection is super slow when a fuckton of files are in the cache
-[ ] - files are not streamed to the ui so its slow on big retrievals
-[ ] - hide the delete button if nothing is selected
-[ ] - add an extra button to select all
-[ ] - search bar
-[ ] - command palette maybe
-[ ] - pass the size and extension and name via the json obj to the ui
-[ ] - add filtering
-[ ] - cache more
-[ ] - when something is deleted it reloads the ENTIRE cache instead of loading previous state - deleted items
-[ ] - add rename function
-[ ] - maybe go to some light ram caching like redis
-[ ] - add a panel view instead of only list
-[ ] - open images and videos in the ui itself
-[ ] - add option for conversion
-[ ] - add option for background removal
-[ ] - add resizer
-[ ] - add a favorites
-[ ] - add recent files
-[ ] - benchmark better
-[ ] - add a duplicate file scanner
-[ ] - pass how big the resolution is 
-[ ] - pass how logn the duration of an mp4 is
-[ ] - new folder creation
-[ ] - move files
-[ ] - allow for auto renaming in a numbered sense, 1,2,3,4,5
-[ ] - add hidden file option
-[ ] - json file viewer
-[ ] - json file syntax
-[ ] - recognize rust projects 
-[ ] - recognize git repos
-[ ] - git pull and push from there
-[ ] - add an OPEN WITH 
-[ ] - add an open in cursor hotbutton
-[ ] - abstract the logic in the header a bit more for calling invokes
-[ ] - get rid of all unwraps
-[ ] - handle the access is denied error
-[ ] - add AVIF file decoding
-[ ] - add WEBP file encoding
-[ ] - show path we're currently in
+- [ ] file selection is super slow when a fuckton of files are in the cache
+- [ ] files are not streamed to the ui so its slow on big retrievals
+- [ ] hide the delete button if nothing is selected
+- [ ] add an extra button to select all
+- [ ] search bar
+- [ ] command palette maybe
+- [ ] pass the size and extension and name via the json obj to the ui
+- [ ] add filtering
+- [ ] cache more
+- [ ] when something is deleted it reloads the ENTIRE cache instead of loading previous state - deleted items
+- [ ] add rename function
+- [ ] maybe go to some light ram caching like redis
+- [ ] add a panel view instead of only list
+- [ ] open images and videos in the ui itself
+- [ ] add option for conversion
+- [ ] add option for background removal
+- [ ] add resizer
+- [ ] add a favorites
+- [ ] add recent files
+- [ ] benchmark better
+- [ ] add a duplicate file scanner
+- [ ] pass how big the resolution is 
+- [ ] pass how logn the duration of an mp4 is
+- [ ] new folder creation
+- [ ] move files
+- [ ] allow for auto renaming in a numbered sense, 1,2,3,4,5
+- [ ] add hidden file option
+- [ ] json file viewer
+- [ ] json file syntax
+- [ ] recognize rust projects 
+- [ ] recognize git repos
+- [ ] git pull and push from there
+- [ ] add an OPEN WITH 
+- [ ] add an open in cursor hotbutton
+- [ ] abstract the logic in the header a bit more for calling invokes
+- [ ] get rid of all unwraps
+- [ ] handle the access is denied error
+- [ ] add AVIF file decoding
+- [ ] add WEBP file encoding
+- [ ] show path we're currently in
+- [ ] improve the bg removal tool
+- [ ] add a url bar to webscrape into that folder lol
+- [ ] Disks dont update in realtime when thumbdrive removed

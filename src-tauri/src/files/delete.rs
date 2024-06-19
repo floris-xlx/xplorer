@@ -1,9 +1,9 @@
 use std::path::Path;
-
+use std::fs;
 
 #[tauri::command(rename_all = "snake_case")]
 pub fn delete_files(filepath_list: Vec<String>) -> bool {
-    use std::fs;
+    
     for path in filepath_list {
         let path: &Path = Path::new(&path);
         if path.is_file() {

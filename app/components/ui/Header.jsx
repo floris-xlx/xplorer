@@ -9,7 +9,7 @@ import { RemoveKeyLocalStorage, SetKeyLocalStorage, GetKeyLocalStorage } from "@
 
 // tauri imports
 import { invoke } from "@tauri-apps/api/tauri";
-
+import { Input } from '@headlessui/react'
 
 const Header = ({
     setPath,
@@ -19,6 +19,11 @@ const Header = ({
     triggerReload,
     setSelectedDiskLetter
 }) => {
+    const [search, setSearch] = useState('');
+
+    console.log('search', search);
+
+
     const removeOnePath = (path) => {
         const currentPath = GetKeyLocalStorage('currentPath');
         // if the path is only x:/ then setSelectedDiskLetter to null
@@ -110,6 +115,18 @@ const Header = ({
         }, 100);
     }
 
+    useEffect(() => {
+        const path = GetKeyLocalStorage('currentPath');
+
+        if (search.length > 0) {
+            invoke("search_keyword_in_files", { keyword: search, filepath: path})
+                .then((result) => console.log(result))
+                .catch(console.error);
+        }
+    }, [search]);
+
+
+
     return (
         <div className="h-[50px] bg-secondary border-b border-primary w-full flex items-center mx-auto justify-between px-1">
 
@@ -119,13 +136,16 @@ const Header = ({
                 <div className="hover:bg-accent transition p-1 rounded-md cursor-pointer ml-1"
                     onClick={removeFilePathCache}
                 >
-                    < ArrowLeftIcon className="w-6 h-6 text-primary" />
+                    < ArrowLeftIcon className="w-6 h-6 text-primary " />
                 </div>
 
 
+                
 
-
+                <Input name="full_name" type="text" onChange={(e) => setSearch(e.target.value)} className="border border-primary bg-secondary"/>
             </div>
+
+
             <div className="flex flex-row gap-x-1">
                 <div className="rounded-md p-1 mr-2 cursor-pointer hover:bg-red-highlight transition"
                     onClick={() => removeFilesInSelection(selectedFiles)}

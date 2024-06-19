@@ -1,9 +1,8 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::fs::File;
-use std::io::BufReader;
+use std::io::{BufReader, BufWriter};
 use image::{ImageFormat, DynamicImage};
 use image::codecs::webp::WebPEncoder;
-use std::io::BufWriter;
 
 
 
@@ -13,7 +12,7 @@ pub fn convert_avif_to_webp(path: &str) -> Result<(), String> {
     println!("Starting conversion from AVIF to WebP for file: {}", path);
     
     let path: &Path = Path::new(path);
-    let output_path: std::path::PathBuf = path.with_extension("webp");
+    let output_path: PathBuf = path.with_extension("webp");
 
     println!("Output path will be: {:?}", output_path);
 

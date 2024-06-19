@@ -4,6 +4,7 @@
 pub mod disk;
 pub mod files;
 pub mod images;
+pub mod directories;
 
 use crate::disk::DisksInfo;
 use crate::disk::list_files::{ list_files_on_drive, list_files_at_root };
@@ -11,7 +12,9 @@ use crate::files::formats::avif::convert_avif_to_webp;
 use crate::files::delete::delete_files;
 use crate::images::remove_background::remove_background;
 use crate::images::resize::resize_images;
+use crate::directories::dir_size::calculate_dir_size_in_gb;
 use crate::files::rename::rename_files;
+use crate::files::search::search_by_name::search_keyword_in_files;
 use std::fs::OpenOptions;
 use serde_json::{ json, Value };
 use std::path::Path;
@@ -22,7 +25,6 @@ use std::process::Child;
 use std::io::Error;
 
 fn main() {
-    println!("Starting Tauri application...");
     log_append_to_file("Starting Tauri application...");
 
     tauri::Builder
@@ -37,19 +39,20 @@ fn main() {
                 delete_files,
                 rename_files,
                 remove_background,
-                resize_images
+                resize_images,
+                calculate_dir_size_in_gb,
+                search_keyword_in_files
             ]
         )
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
-
-    println!("Tauri application started successfully.");
     log_append_to_file("Tauri application started successfully.");
 }
 
+
 #[tauri::command]
 fn list_drives() -> Value {
-    println!("Listing drives...");
+
     log_append_to_file("Listing drives...");
 
     let drives: Vec<DisksInfo> = DisksInfo::list_drives();
@@ -74,7 +77,6 @@ fn list_drives() -> Value {
         "length": drives_json.len()
     });
 
-    println!("Drives listed: {:?}", response);
     log_append_to_file(&format!("Drives listed: {:?}", response));
 
     response
@@ -89,15 +91,14 @@ fn list_files(path: &str) -> Value {
         log_append_to_file(error_message);
         return json!({ "error": "Path is null" });
     }
-    println!("Listing files from path: {}", path);
+
     log_append_to_file(&format!("Listing files from path: {}", path));
 
     let start_time_in_ms: u128 = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
-    println!("Start time in ms: {}", start_time_in_ms);
     log_append_to_file(&format!("Start time in ms: {}", start_time_in_ms));
 
     let result: Vec<Value> = list_files_on_drive(path);
-    println!("Result from list_files_on_drive: {:?}", result);
+
     log_append_to_file(&format!("Result from list_files_on_drive: {:?}", result));
 
     let mut files: Vec<Value> = Vec::new();
@@ -105,26 +106,26 @@ fn list_files(path: &str) -> Value {
 
     for item in result {
         if item.get("file").is_some() {
-            println!("File found: {:?}", item);
+        
             log_append_to_file(&format!("File found: {:?}", item));
             files.push(item);
         } else if item.get("directory").is_some() {
-            println!("Directory found: {:?}", item);
+       
             log_append_to_file(&format!("Directory found: {:?}", item));
             dirs.push(item);
         }
     }
 
     let end_time_in_ms: u128 = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
-    println!("End time in ms: {}", end_time_in_ms);
+
     log_append_to_file(&format!("End time in ms: {}", end_time_in_ms));
 
     let total_amount_files: usize = files.len();
-    println!("Total amount of files: {}", total_amount_files);
+
     log_append_to_file(&format!("Total amount of files: {}", total_amount_files));
 
     let total_amount_dirs: usize = dirs.len();
-    println!("Total amount of directories: {}", total_amount_dirs);
+
     log_append_to_file(&format!("Total amount of directories: {}", total_amount_dirs));
 
     let total_time: u128 = end_time_in_ms - start_time_in_ms;
@@ -138,7 +139,7 @@ fn list_files(path: &str) -> Value {
         total_time,
         path
     );
-    println!("Total log: {}", total_log);
+
     log_append_to_file(&total_log);
 
     let response =
@@ -149,7 +150,7 @@ fn list_files(path: &str) -> Value {
         "total_amount_files": total_amount_files, 
         "total_amount_dirs": total_amount_dirs
     });
-    println!("Response: {:?}", response);
+
     log_append_to_file(&format!("Response: {:?}", response));
 
     response
@@ -157,17 +158,17 @@ fn list_files(path: &str) -> Value {
 
 #[tauri::command(rename_all = "snake_case")]
 fn list_files_from_root(path: &str) -> Value {
-    println!("Listing files from root path: {}", path);
+
     log_append_to_file(&format!("Listing files from root path: {}", path));
 
     let start_time_in_ms: u128 = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
-    println!("Start time in ms: {}", start_time_in_ms);
+
     log_append_to_file(&format!("Start time in ms: {}", start_time_in_ms));
 
     let filepath: &Path = Path::new(path);
 
     let result: Vec<Value> = list_files_at_root(filepath).unwrap();
-    println!("Result from list_files_at_root: {:?}", result);
+
     log_append_to_file(&format!("Result from list_files_at_root: {:?}", result));
 
     let mut files: Vec<Value> = Vec::new();
@@ -175,22 +176,22 @@ fn list_files_from_root(path: &str) -> Value {
 
     for item in result {
         if item.get("file").is_some() {
-            println!("File found: {:?}", item);
+         
             log_append_to_file(&format!("File found: {:?}", item));
             files.push(item);
         } else if item.get("directory").is_some() {
-            println!("Directory found: {:?}", item);
+          
             log_append_to_file(&format!("Directory found: {:?}", item));
             dirs.push(item);
         }
     }
 
     let total_amount_files: usize = files.len();
-    println!("Total amount of files: {}", total_amount_files);
+
     log_append_to_file(&format!("Total amount of files: {}", total_amount_files));
 
     let total_amount_dirs: usize = dirs.len();
-    println!("Total amount of directories: {}", total_amount_dirs);
+   
     log_append_to_file(&format!("Total amount of directories: {}", total_amount_dirs));
 
     let end_time_in_ms: u128 = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
@@ -205,7 +206,7 @@ fn list_files_from_root(path: &str) -> Value {
         total_time,
         path
     );
-    println!("Total log: {}", total_log);
+
     log_append_to_file(&total_log);
 
     let response =
@@ -216,7 +217,7 @@ fn list_files_from_root(path: &str) -> Value {
         "total_amount_files": total_amount_files, 
         "total_amount_dirs": total_amount_dirs
     });
-    println!("Response: {:?}", response);
+
     log_append_to_file(&format!("Response: {:?}", response));
 
     response
@@ -236,7 +237,7 @@ fn log_append_to_file(log: &str) {
 
 #[tauri::command(rename_all = "snake_case")]
 fn open_file_from_path(path: &str) -> Result<(), String> {
-    println!("Opening file from path: {}", path);
+
     log_append_to_file(&format!("Opening file from path: {}", path));
 
     // Normalize path to use forward slashes
