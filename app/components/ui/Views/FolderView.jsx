@@ -14,7 +14,7 @@ const FolderView = ({ files, directories, setPath, path, selectedFiles, setSelec
     console.log('fileThumbnails', fileThumbnails);
 
     // invoke rust func 
-    
+
     const [localFiles, setLocalFiles] = useState([]);
     console.log('localFiles', localFiles);
 
@@ -23,13 +23,23 @@ const FolderView = ({ files, directories, setPath, path, selectedFiles, setSelec
             ...file,
             thumbnail: fileThumbnails[file.file] || null
         }));
+        console.log('mergedFiles', mergedFiles);
         setLocalFiles(mergedFiles);
     }, [files, fileThumbnails]);
 
-   
+
     useEffect(() => {
         files.forEach((file) => {
-            invoke("get_thumbnail", { path: file.file })
+            invoke("get_image_thumbnail", { path: file.file })
+                .then((thumbnail) => {
+                    setFileThumbnails((prevFileThumbnails) => ({
+                        ...prevFileThumbnails,
+                        [file.file]: thumbnail,
+                    }));
+                })
+                .catch(console.error);
+
+            invoke("get_video_thumbnail", { path: file.file })
                 .then((thumbnail) => {
                     setFileThumbnails((prevFileThumbnails) => ({
                         ...prevFileThumbnails,
@@ -71,45 +81,47 @@ const FolderView = ({ files, directories, setPath, path, selectedFiles, setSelec
         'extra-large': 'w-[512px] h-[512px]',
     }
 
-    const [previewSize, setPreviewSize] = useState('medium');
+    const [previewSize, setPreviewSize] = useState('extra-large');
 
     // 
-    
+
     return (
         <div>
-            <ul>
-                {directories.sort((a, b) => a.directory.localeCompare(b.directory)).map((directory) => (
-                    <li key={directory.directory}>
-                        <div className="flex flex-row gap-1 rounded-md hover:bg-accent transition mt-[2px] select-none p-1 cursor-pointer"
-                            onClick={() => setPath(directory.directory)}>
-                            <FolderIcon className="w-6 h-6 text-secondary" />
-                            <p className="text-primary">{directory.name}</p>
-                        </div>
-                    </li>
-                ))}
-            </ul>
+            <React.Fragment>
+                <ul>
+                    {directories.sort((a, b) => a.directory.localeCompare(b.directory)).map((directory) => (
+                        <li key={directory.directory}>
+                            <div className="flex flex-row gap-1 rounded-md hover:bg-accent transition mt-[2px] select-none p-1 cursor-pointer"
+                                onClick={() => setPath(directory.directory)}>
+                                <FolderIcon className="w-6 h-6 text-secondary" />
+                                <p className="text-primary">{directory.name}</p>
+                            </div>
+                        </li>
+                    ))}
+                </ul>
+            </React.Fragment>
+            <React.Fragment>
+                <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {localFiles.sort((a, b) => a.file.localeCompare(b.file)).map((file) => (
+                        <li key={file.file}>
+                            <div className="flex flex-row gap-1 rounded-md hover:bg-accent transition mt-[2px] select-none p-1 cursor-pointer h-fit "
+                                onClick={() => openFile(file.file)}>
 
-
-            <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {localFiles.sort((a, b) => a.file.localeCompare(b.file)).map((file) => (
-                    <li key={file.file}>
-                        <div className="flex flex-row gap-1 rounded-md hover:bg-accent transition mt-[2px] select-none p-1 cursor-pointer"
-                            onClick={() => openFile(file.file)}>
-
-                            {file.thumbnail ? (
-                                <img src={`data:image/png;base64,${file.thumbnail}`} alt="thumbnail" className={`${filePreview[previewSize]} rounded-md`} />
-                            ) : (
-                                <div className="flex flex-row gap-x-1 z-0">
-                                    <Checkbox isSelected={isThisBoxTicked(file.file)} onChange={() => handleCheckboxChange(file.file)} color="success">
-                                        <DocumentIcon className="w-6 h-6 text-secondary" />
-                                    </Checkbox>
-                                </div>
-                            )}
-                            <p className="text-primary flex items-center">{file.filename.length > 30 ? `${file.filename.slice(0, 30)}...` : file.filename}</p>
-                        </div>
-                    </li>
-                ))}
-            </ul>
+                                {file.thumbnail ? (
+                                    <img src={`data:image/png;base64,${file.thumbnail}`} alt="thumbnail" className={`${filePreview[previewSize]} rounded-md object-contain`} />
+                                ) : (
+                                    <div className="flex flex-row gap-x-1 z-0">
+                                        <Checkbox isSelected={isThisBoxTicked(file.file)} onChange={() => handleCheckboxChange(file.file)} color="success">
+                                            <DocumentIcon className="w-6 h-6 text-secondary" />
+                                        </Checkbox>
+                                    </div>
+                                )}
+                                <p className="text-primary flex items-center">{file.filename.length > 30 ? `${file.filename.slice(0, 30)}...` : file.filename}</p>
+                            </div>
+                        </li>
+                    ))}
+                </ul>
+            </React.Fragment>
         </div>
     );
 };

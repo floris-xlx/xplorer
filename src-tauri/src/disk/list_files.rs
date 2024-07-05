@@ -69,27 +69,7 @@ fn process_file(path: &Path) -> Result<Value, Error> {
 
 
 #[tauri::command(rename_all = "snake_case")]
-pub fn get_thumbnail(path: &str) -> Result<String, String> {
-    let path = Path::new(path);
-    let extension = path.extension().and_then(OsStr::to_str).unwrap_or("").to_lowercase();
-
-    if is_image_extension(&extension) {
-        match get_image_thumbnail_base64(&path) {
-            Ok(thumbnail) => Ok(thumbnail),
-            Err(e) => Err(e.to_string()),
-        }
-    } else if is_video_extension(&extension) {
-        match get_video_thumbnail_base_64(&path) {
-            Ok(thumbnail) => Ok(thumbnail),
-            Err(e) => Err(e.to_string()),
-        }
-    } else {
-        Err("File is neither an image nor a video".to_string())
-    }
-}
-
-#[tauri::command(rename_all = "snake_case")]
-pub fn get_image_thumbnail(path: &str) -> Result<String, String> {
+pub async fn get_image_thumbnail(path: &str) -> Result<String, String> {
     let path = Path::new(path);
     let extension = path.extension().and_then(OsStr::to_str).unwrap_or("").to_lowercase();
     
@@ -97,7 +77,7 @@ pub fn get_image_thumbnail(path: &str) -> Result<String, String> {
         return Err("File is not an image".to_string());
     }
 
-    match get_image_thumbnail_base64(path) {
+    match get_image_thumbnail_base64(path).await {
         Ok(thumbnail) => Ok(thumbnail),
         Err(e) => Err(e.to_string()),
     }
@@ -118,7 +98,8 @@ pub fn get_video_thumbnail(path: &str) -> Result<String, String> {
     }
 }
 
-pub fn get_image_thumbnail_base64(path: &Path) -> Result<String, Error> {
+
+pub async fn get_image_thumbnail_base64(path: &Path) -> Result<String, Error> {
     println!("Opening image at path: {:?}", path);
     let metadata = fs::metadata(path)?;
     if metadata.len() == 0 {

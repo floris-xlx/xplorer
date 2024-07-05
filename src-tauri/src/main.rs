@@ -28,9 +28,10 @@ use std::io::Error;
 //v2 
 // use crate::v2::list_directory::v2_list_files;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     log_append_to_file("Starting Tauri application...");
-
+    
     tauri::Builder
         ::default()
         .invoke_handler(
@@ -52,6 +53,9 @@ fn main() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
     log_append_to_file("Tauri application started successfully.");
+    
+
+    tauri::async_runtime::set(tokio::runtime::Handle::current());
 }
 
 

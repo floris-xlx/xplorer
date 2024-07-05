@@ -23,6 +23,7 @@ const Header = ({ setPath, path, setSelectedFiles, selectedFiles, triggerReload,
         const path = pathArray.join('/') + '/';
         setPath(path);
         SetKeyLocalStorage('currentPath', path);
+        triggerReload();
     };
 
     const handleFileAction = (action, folderPaths) => {
