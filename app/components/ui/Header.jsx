@@ -1,19 +1,28 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { ArrowLeftIcon, PencilSquareIcon, EyeDropperIcon, RectangleStackIcon } from '@heroicons/react/20/solid';
 import { LuTrash } from "react-icons/lu";
-import { RemoveKeyLocalStorage, SetKeyLocalStorage, GetKeyLocalStorage } from "@/app/client/caching/LocalStorageRouter";
+import { RemoveKeyLocalStorage, SetKeyLocalStorage, GetKeyLocalStorage, clearAll } from "@/app/client/caching/LocalStorageRouter";
 import { invoke } from "@tauri-apps/api/tauri";
 import { Input } from '@headlessui/react';
 
-const Header = ({ setPath, path, setSelectedFiles, selectedFiles, triggerReload, setSelectedDiskLetter, search, setSearch }) => {
-    const removeOnePath = (currentPath) => {
-        if (currentPath.length === 3) {
+const Header = ({ setPath, path, setSelectedFiles, selectedFiles, triggerReload, setSelectedDiskLetter, search, setSearch, setIsInDrive, isInDrive }) => {
+
+    const removeAllCharsTillSlashFromEnd = (currentPath) => {
+        const areWeInRoot = currentPath.match(/^[a-zA-Z]:\/$/);
+        if (areWeInRoot) {
             setSelectedDiskLetter(null);
-            return '';
+            clearAll();
+            setIsInDrive(true)
+
+            return;
         }
 
-        const lastSeparator = Math.max(currentPath.lastIndexOf('\\'), currentPath.lastIndexOf('/'));
-        return lastSeparator !== currentPath.substring(0, lastSeparator);
+
+        const pathArray = currentPath.split('/');
+        pathArray.pop();
+        const path = pathArray.join('/') + '/';
+        setPath(path);
+        SetKeyLocalStorage('currentPath', path);
     };
 
     const handleFileAction = (action, folderPaths) => {
@@ -24,16 +33,21 @@ const Header = ({ setPath, path, setSelectedFiles, selectedFiles, triggerReload,
         setSelectedFiles([]);
     };
 
+
+
     return (
         <div className="h-[50px] bg-secondary border-b border-primary w-full flex items-center mx-auto justify-between px-1">
-            <div onClick={() => setPath(removeOnePath(path))}>
+            <div>
+
                 <div className="hover:bg-accent transition p-1 rounded-md cursor-pointer ml-1" onClick={() => {
                     RemoveKeyLocalStorage('selectedFilePath');
                     setSelectedFiles([]);
+                    removeAllCharsTillSlashFromEnd(path);
                 }}>
                     <ArrowLeftIcon className="w-6 h-6 text-primary" />
                 </div>
-                <Input name="full_name" type="text" onChange={(e) => setSearch(e.target.value)} value={search} className="border border-primary bg-secondary" />
+
+                {/* <Input name="full_name" type="text" onChange={(e) => setSearch(e.target.value)} value={search} className="border border-primary bg-secondary" /> */}
             </div>
 
             <div className="flex flex-row gap-x-1">

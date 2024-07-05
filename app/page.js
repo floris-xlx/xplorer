@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
-import { GetKeyLocalStorage, SetKeyLocalStorage } from "@/app/client/caching/LocalStorageRouter";
+import { GetKeyLocalStorage, SetKeyLocalStorage, clearAll } from "@/app/client/caching/LocalStorageRouter";
 import FolderView from "./components/ui/Views/FolderView";
 import Header from "./components/ui/Header";
 import ListDrives from "./components/ListDrives";
@@ -16,18 +16,27 @@ export default function Home() {
   const [loadingTime, setLoadingTime] = useState(0);
   const [search, setSearch] = useState('');
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const [isInDrive, setIsInDrive] = useState(true);
+
+  console.log('files', files);
+
+  console.log(path);
 
   useEffect(() => {
     SetKeyLocalStorage("currentDiskLetter", selectedDiskLetter);
     if (selectedDiskLetter) {
       const pathFromDiskLetter = `${selectedDiskLetter}:/`;
+      console.log('pathFromDiskLetter', pathFromDiskLetter);
       SetKeyLocalStorage("currentPath", pathFromDiskLetter);
+      setIsInDrive(false);
     }
   }, [selectedDiskLetter]);
 
   useEffect(() => {
-    if (path) {
+    if (path && path !== true ) {
       SetKeyLocalStorage("currentPath", path);
+
+      setIsInDrive(true);
     }
   } , [path]);
 
@@ -53,10 +62,13 @@ export default function Home() {
         setLoadingTime(files.loading_time);
       })
       .catch(console.error);
+      console.log('selectedDiskLetter useEffect files', files);
   }, [selectedDiskLetter]);
 
   useEffect(() => {
-    if (path) {
+    if (path !== true && path !== false && path) {
+      
+    
       const newPath = path.startsWith(`${selectedDiskLetter}:`) ? path : `${selectedDiskLetter}:${path}`;
       invoke("list_files_from_root", { path: newPath })
         .then((files) => {
@@ -65,6 +77,7 @@ export default function Home() {
           setLoadingTime(files.loading_time);
         })
         .catch(console.error);
+        console.log('path useEffect files', files);
     }
   }, [path]);
 
@@ -81,6 +94,7 @@ export default function Home() {
     }, 250);
 
     return () => clearTimeout(timeoutId);
+
   }, [search]);
 
   return (
@@ -95,14 +109,18 @@ export default function Home() {
           setSelectedDiskLetter={setSelectedDiskLetter}
           search={search}
           setSearch={setSearch}
+          setIsInDrive={setIsInDrive}
+          isInDrive={isInDrive}
         />
       </div>
       
       <p className="fixed bottom-0 left-0 text-red-primary font-semibold text-md p-1 select-none bg-secondary border border-red-400 rounded-md z-100 opacity-40 hover:opacity-100 transition"> 
         Loaded in {loadingTime}ms
+
+        <button onClick={() => clearAll()} className="ml-2">Clear All</button>
       </p>
 
-      <div className="flex overflow-x-hidden">
+      <div className="flex overflow-x-hidden ">
         {selectedDiskLetter ? (
           <div className="w-[100vw] px-[25px] mt-[50px]">
             <FolderView

@@ -54,10 +54,12 @@ fn serialize_directory(path: &Path) -> Result<Value, Error> {
     }))
 }
 
+/// this handles the actual file return
 fn process_file(path: &Path) -> Result<Value, Error> {
-    let file_str = path.to_str().unwrap();
-    let file_extension = path.extension().and_then(OsStr::to_str).unwrap_or("").to_lowercase();
-    let filename = path.file_name().and_then(OsStr::to_str).unwrap_or("").to_string();
+    let file_str: &str = path.to_str().unwrap();
+    let file_extension: String = path.extension().and_then(OsStr::to_str).unwrap_or("").to_lowercase();
+    let filename: String = path.file_name().and_then(OsStr::to_str).unwrap_or("").to_string();
+
     Ok(json!({
         "file": file_str,
         "filename": filename,
@@ -65,17 +67,139 @@ fn process_file(path: &Path) -> Result<Value, Error> {
     }))
 }
 
-fn get_image_thumbnail_base64(path: &Path) -> Result<String, Error> {
+
+#[tauri::command(rename_all = "snake_case")]
+pub fn get_thumbnail(path: &str) -> Result<String, String> {
+    let path = Path::new(path);
+    let extension = path.extension().and_then(OsStr::to_str).unwrap_or("").to_lowercase();
+
+    if is_image_extension(&extension) {
+        match get_image_thumbnail_base64(&path) {
+            Ok(thumbnail) => Ok(thumbnail),
+            Err(e) => Err(e.to_string()),
+        }
+    } else if is_video_extension(&extension) {
+        match get_video_thumbnail_base_64(&path) {
+            Ok(thumbnail) => Ok(thumbnail),
+            Err(e) => Err(e.to_string()),
+        }
+    } else {
+        Err("File is neither an image nor a video".to_string())
+    }
+}
+
+#[tauri::command(rename_all = "snake_case")]
+pub fn get_image_thumbnail(path: &str) -> Result<String, String> {
+    let path = Path::new(path);
+    let extension = path.extension().and_then(OsStr::to_str).unwrap_or("").to_lowercase();
+    
+    if !is_image_extension(&extension) {
+        return Err("File is not an image".to_string());
+    }
+
+    match get_image_thumbnail_base64(path) {
+        Ok(thumbnail) => Ok(thumbnail),
+        Err(e) => Err(e.to_string()),
+    }
+}
+
+#[tauri::command(rename_all = "snake_case")]
+pub fn get_video_thumbnail(path: &str) -> Result<String, String> {
+    let path = Path::new(path);
+    let extension = path.extension().and_then(OsStr::to_str).unwrap_or("").to_lowercase();
+
+    if !is_video_extension(&extension) {
+        return Err("File is not a video".to_string());
+    }
+
+    match get_video_thumbnail_base_64(path) {
+        Ok(thumbnail) => Ok(thumbnail),
+        Err(e) => Err(e.to_string()),
+    }
+}
+
+pub fn get_image_thumbnail_base64(path: &Path) -> Result<String, Error> {
+    println!("Opening image at path: {:?}", path);
+    let metadata = fs::metadata(path)?;
+    if metadata.len() == 0 {
+        return Err(Error::msg("Image file is empty"));
+    }
+
     let image = ImageReader::open(path)?.decode()?;
-    let thumbnail = image.thumbnail(100, 100);
+    println!("Image opened and decoded successfully.");
+
+    println!("Creating thumbnail for the image.");
+    let thumbnail = image.thumbnail(512, 512    );
     let mut buffer = Cursor::new(Vec::new());
+
+    println!("Writing thumbnail to buffer.");
     thumbnail.write_to(&mut buffer, ImageFormat::Png)?;
-    Ok(encode(buffer.get_ref()))
+    println!("Thumbnail written to buffer successfully.");
+
+    if buffer.get_ref().is_empty() {
+        return Err(Error::msg("Thumbnail buffer is empty"));
+    }
+
+    let encoded_thumbnail = encode(buffer.get_ref());
+    println!("Thumbnail encoded to base64 successfully.");
+
+    Ok(encoded_thumbnail)
+}
+
+use std::process::Command;
+
+pub fn get_video_thumbnail_base_64(path: &Path) -> Result<String, Error> {
+    println!("Opening video at path: {:?}", path);
+    let metadata = fs::metadata(path)?;
+    if metadata.len() == 0 {
+        return Err(Error::msg("Video file is empty"));
+    }
+
+    // Use ffmpeg to generate a thumbnail
+    let output = Command::new("ffmpeg")
+        .args(&[
+            "-i", path.to_str().unwrap(),
+            "-ss", "00:00:01.000",
+            "-vframes", "1",
+            "-f", "image2pipe",
+            "-vcodec", "png",
+            "-",
+        ])
+        .output()?;
+
+    if !output.status.success() {
+        return Err(Error::msg("Failed to generate video thumbnail"));
+    }
+
+    let thumbnail = ImageReader::new(Cursor::new(output.stdout)).with_guessed_format()?.decode()?;
+    println!("Video thumbnail generated and decoded successfully.");
+
+    println!("Creating thumbnail for the video.");
+    let thumbnail = thumbnail.thumbnail(512, 512);
+    let mut buffer = Cursor::new(Vec::new());
+
+    println!("Writing thumbnail to buffer.");
+    thumbnail.write_to(&mut buffer, ImageFormat::Png)?;
+    println!("Thumbnail written to buffer successfully.");
+
+    if buffer.get_ref().is_empty() {
+        return Err(Error::msg("Thumbnail buffer is empty"));
+    }
+
+    let encoded_thumbnail = encode(buffer.get_ref());
+    println!("Thumbnail encoded to base64 successfully.");
+
+    Ok(encoded_thumbnail)
 }
 
 
 fn is_image_extension(extension: &str) -> bool {
     matches!(extension, "png" | "jpeg" | "jpg" | "ico" | "gif")
+}
+
+
+fn is_video_extension(extension: &str) -> bool {
+    matches!(extension.to_lowercase().as_str(), "mp4" | "mkv" | "avi" | "mov" | "flv" | "wmv")
 }
 
 fn read_dir(dir: &Path) -> Result<ReadDir, Error> {

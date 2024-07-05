@@ -41,3 +41,7 @@
 - [ ] improve the bg removal tool
 - [ ] add a url bar to webscrape into that folder lol
 - [ ] Disks dont update in realtime when thumbdrive removed
+- [ ] filter between videos and images etc
+- [ ] sort on size
+- [ ] add file move option
+- [ ] random file opener

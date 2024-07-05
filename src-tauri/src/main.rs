@@ -8,7 +8,7 @@ pub mod directories;
 pub mod v2;
 
 use crate::disk::DisksInfo;
-use crate::disk::list_files::{ list_files_on_drive, list_files_at_root };
+use crate::disk::list_files::{ list_files_on_drive, list_files_at_root, get_image_thumbnail };
 use crate::files::formats::avif::convert_avif_to_webp;
 use crate::files::delete::delete_files;
 use crate::images::remove_background::remove_background;
@@ -26,7 +26,7 @@ use std::process::Child;
 use std::io::Error;
 
 //v2 
-use crate::v2::list_directory::v2_list_files;
+// use crate::v2::list_directory::v2_list_files;
 
 fn main() {
     log_append_to_file("Starting Tauri application...");
@@ -46,7 +46,7 @@ fn main() {
                 resize_images,
                 calculate_dir_size_in_gb,
                 search_keyword_in_files,
-                v2_list_files
+                get_image_thumbnail
             ]
         )
         .run(tauri::generate_context!())

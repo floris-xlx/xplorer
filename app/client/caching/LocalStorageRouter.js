@@ -4,7 +4,8 @@ const AllowedKeys = [
   'currentView',
   'currentDiskLetter',
   'currentPath',
-  'scopedFolder'
+  'scopedFolder',
+  'isInDrive'
 ];
 
 function SetKeyLocalStorage(key, value) {
